@@ -101,16 +101,18 @@ from (Luogo l join Svolta s on l.id=s.luogo) join Opera o on s.Opera=o.id;
 
 
 delimiter //
-create procedure p4(in Incasso_soglia float)
+create procedure p1(in Incasso_soglia float)
 begin
 drop temporary table if exists tmp;
 create temporary table tmp(
+  citta varchar(255),
   indirizzo varchar(255),
+  titolo varchar(255),
   Incasso_totale float
 );
 
 insert into tmp
-select Indirizzo , Incasso_totale
+select Città,Indirizzo ,Titolo_Opera, Incasso_totale
 from vista1
 where Incasso_totale > incasso_soglia;
 
