@@ -1,0 +1,141 @@
+create table OPERA(
+  ID integer primary key,
+  Titolo varchar(255),
+  Autore varchar(255),
+  Descrizione varchar(255),
+  Copertina varchar(255),
+  Costo_biglietto float,
+  Incasso_totale float
+);
+
+create table LUOGO(
+   ID integer primary key,
+   Citta varchar(255),
+   Indirizzo varchar(255),
+   Nome varchar (255)
+
+);
+
+create table SVOLTA(
+   Luogo integer,
+   Opera integer,
+
+   INDEX idx_ope(Opera),
+   Foreign key(Opera) references OPERA(ID),
+   INDEX idx_luog(Luogo),
+   FOREIGN KEY(Luogo) references LUOGO(ID),
+
+primary key(Luogo,Opera)
+);
+
+create table USER(
+  CF varchar(255) primary key,
+  Nome varchar(255),
+  Cognome varchar(255),
+  Username varchar(255) unique,
+  Password varchar(255) not null
+);
+
+create table VISIONE(
+  User varchar(255),
+  Opera integer,
+  Data varchar(255),
+  Ora varchar(255),
+  
+  
+  INDEX idx_usr (User),
+  FOREIGN KEY (User) REFERENCES USER(CF),
+  INDEX idx_ope (Opera),
+  FOREIGN KEY (Opera) REFERENCES OPERA(ID),
+  
+  primary key(User,Opera,Data,Ora)
+);
+
+create table PREFERITI(
+  User varchar(255),
+  ID_opera integer,
+
+  INDEX idx_usr1(User),
+  FOREIGN KEY (User) REFERENCES USER(CF),
+  INDEX idx_idop(ID_opera),
+  FOREIGN KEY (ID_opera) REFERENCES OPERA(ID),
+
+  primary key(User,ID_opera)
+
+);
+
+
+delimiter //
+create trigger aggiorna_incassototale_opera
+after insert on VISIONE
+for each row
+begin
+if exists(select id from opera where id = new.Opera)
+then
+    update OPERA set Incasso_totale = Incasso_totale + Costo_biglietto
+    where id = new.opera;
+end if;
+end//
+
+
+delimiter //
+create trigger aggiorna_incassototale_opera2
+after delete on VISIONE
+for each row
+begin
+if exists(select id from opera where id = old.Opera)
+then
+    update OPERA set Incasso_totale = Incasso_totale - Costo_biglietto
+    where id = old.opera;
+end if;
+end//
+
+
+
+
+create view vista1 as
+select l.citta  as Città , l.indirizzo as Indirizzo , o.Titolo as Titolo_Opera , o.Incasso_totale as Incasso_totale 
+from (Luogo l join Svolta s on l.id=s.luogo) join Opera o on s.Opera=o.id;
+
+
+
+
+delimiter //
+create procedure p4(in Incasso_soglia float)
+begin
+drop temporary table if exists tmp;
+create temporary table tmp(
+  indirizzo varchar(255),
+  Incasso_totale float
+);
+
+insert into tmp
+select Indirizzo , Incasso_totale
+from vista1
+where Incasso_totale > incasso_soglia;
+
+select * from tmp;
+
+end//
+
+
+insert into OPERA values
+  (0,'Amleto','Shakespeare','Amleto è una delle opere drammaturgiche più famose al mondo','https://4.bp.blogspot.com/-ZBtMMrx5uY4/VucJexf_NDI/AAAAAAAABXQ/-isK1SlxkcA90MU7fI39TBkjBF4D74pUw/s1600/52bf5d93c7a84395e13ba8fd3f368802.jpg',150,0),
+  (1,'Gli uccelli','Aristofane',"Gli uccelli viene oggi considerata un'opera di evasione",'https://nubicuculia.files.wordpress.com/2011/10/uccelli.jpg',25,0),
+  (2,'Tartuffo','Molière',"Satira nei confronti della società nobile francese del 1600. Il Tartuffo è infatti l'emblema dell'ipocrita che vive sotto la maschera della devozione religiosa e dell'amicizia verso Orgone ma in realtà vuole approfittare della sua fiducia per trarne vantaggio e, in seguito, tradirlo",'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d2/Tartuffe.jpg/265px-Tartuffe.jpg',30,0),
+  (3,'Le beatrici','Stefano Benni','Realizzata dallo scrittore,giornalista e poeta italiano contemporaneo : Stefano Benni','https://www.stefanobenni.it/sbwc/uploads/2014/06/Le-Beatrici1.jpg',70,0),
+  (4,'Aspettando Godot','Samuel Beckett',"Aspettando Godot è un'opera teatrale di Samuel Beckett.Dramma associato al cosiddetto teatro dell'assurdo e costruito intorno alla condizione dell'attesa",'https://www.euroclub.it/copertineLarge/871905.gif',100,0);
+
+insert into LUOGO values 
+  (1,'Milano','Via Filodrammatici, 2','Teatro alla Scala'),
+  (2,'Napoli','Via Brombeis, 5','Teatro di San Carlo'),
+  (3,'Roma','Via del Teatro, 4','Teatro Argentina'),
+  (4,'Cremona','Corso Vittorio Emanuele II,','Teatro Ponchielli'),
+  (5,'Lecce','Via XXV Luglio, 30','Teatro Politeama Greco');
+
+insert into SVOLTA values
+  (1,1),
+  (2,2),
+  (3,0),
+  (4,3),
+  (5,4);
