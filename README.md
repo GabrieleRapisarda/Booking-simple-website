@@ -1,4 +1,5 @@
-# HMW-1
+# Project for Univeristy of Catania
 
 ## Gabriele Rapisarda O46002228
-### Nel caso in cui il dump theater.sql non andasse bene, in Db_theater.txt è possibile trovare i dati del database
+
+### This repo contains php/css/js files of a homework developed during the university studies
